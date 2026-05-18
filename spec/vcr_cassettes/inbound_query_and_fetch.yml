@@ -1,0 +1,105 @@
+# Hand-crafted cassette for ksef-rb v0.1.0 integration spec.
+# Synthesised from the OpenAPI 3.0.4 spec at:
+#   https://api-test.ksef.mf.gov.pl/docs/v2/openapi.json
+# and from response shapes in the CIRFMF reference clients (csharp/java).
+# Replace with a live recording (KSEF_RECORD=true) once a sandbox token is
+# available.
+---
+http_interactions:
+  - request:
+      method: post
+      uri: https://api-test.ksef.mf.gov.pl/v2/invoices/query/metadata?pageOffset=0&pageSize=100&sortOrder=Asc
+      body:
+        encoding: UTF-8
+        string: '{"subjectType":"Subject2","dateRange":{"dateType":"PermanentStorage","from":"2025-08-01T00:00:00Z","to":"2025-09-01T00:00:00Z"}}'
+      headers:
+        Authorization:
+          - Bearer test-access-token
+        Content-Type:
+          - application/json
+    response:
+      status:
+        code: 200
+        message: OK
+      headers:
+        Content-Type:
+          - application/json
+      body:
+        encoding: UTF-8
+        string: |
+          {
+            "hasMore": false,
+            "isTruncated": false,
+            "permanentStorageHwmDate": "2025-08-30T00:00:00Z",
+            "invoices": [
+              {
+                "ksefNumber": "5555555555-20250828-010080615740-E4",
+                "invoiceNumber": "FA/2025/0001",
+                "issueDate": "2025-08-27",
+                "invoicingDate": "2025-08-28T09:22:13Z",
+                "acquisitionDate": "2025-08-28T09:22:56Z",
+                "permanentStorageDate": "2025-08-28T09:23:01Z",
+                "seller": { "nip": "5555555555", "name": "Pro Bau Sp. z o.o." },
+                "buyer": {
+                  "identifier": { "type": "Nip", "value": "1234567890" },
+                  "name": "Test Buyer"
+                },
+                "netAmount": 1000.00,
+                "grossAmount": 1230.00,
+                "vatAmount": 230.00,
+                "currency": "PLN",
+                "invoicingMode": "Online",
+                "invoiceType": "Vat",
+                "formCode": { "systemCode": "FA (3)", "schemaVersion": "1-0E", "value": "FA" },
+                "isSelfInvoicing": false,
+                "hasAttachment": false,
+                "invoiceHash": "mkht+3m5trnfxlTYhq3QFn74LkEO69MFNlsMAkCDSPA="
+              }
+            ]
+          }
+      http_version: '1.1'
+    recorded_at: Sun, 18 May 2025 00:00:00 GMT
+  - request:
+      method: get
+      uri: https://api-test.ksef.mf.gov.pl/v2/invoices/ksef/5555555555-20250828-010080615740-E4
+      body:
+        encoding: UTF-8
+        string: ''
+      headers:
+        Authorization:
+          - Bearer test-access-token
+        Accept:
+          - application/xml
+    response:
+      status:
+        code: 200
+        message: OK
+      headers:
+        Content-Type:
+          - application/xml
+        X-Ms-Meta-Hash:
+          - mkht+3m5trnfxlTYhq3QFn74LkEO69MFNlsMAkCDSPA=
+      body:
+        encoding: UTF-8
+        string: |
+          <?xml version="1.0" encoding="UTF-8"?>
+          <Faktura xmlns="http://crd.gov.pl/wzor/2023/06/29/12648/">
+            <Naglowek>
+              <KodFormularza kodSystemowy="FA (3)" wersjaSchemy="1-0E">FA</KodFormularza>
+            </Naglowek>
+            <Podmiot1>
+              <DaneIdentyfikacyjne>
+                <NIP>5555555555</NIP>
+                <Nazwa>Pro Bau Sp. z o.o.</Nazwa>
+              </DaneIdentyfikacyjne>
+            </Podmiot1>
+            <Podmiot2>
+              <DaneIdentyfikacyjne>
+                <NIP>1234567890</NIP>
+                <Nazwa>Test Buyer</Nazwa>
+              </DaneIdentyfikacyjne>
+            </Podmiot2>
+          </Faktura>
+      http_version: '1.1'
+    recorded_at: Sun, 18 May 2025 00:00:00 GMT
+recorded_with: VCR 6.4.0
