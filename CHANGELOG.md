@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-05-19
+
+### Added
+- `lib/ksef-rb.rb` shim so `gem "ksef-rb"` works in any Gemfile without
+  the `require: "ksef"` option. Consumers who already use the explicit
+  `require:` form keep working unchanged.
+
 ## [0.1.0] - 2025-05-18
 
 ### Added

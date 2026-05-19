@@ -15,7 +15,7 @@ but additions are expected as more KSeF features land.
 ## Installation
 
 ```ruby
-gem "ksef-rb", require: "ksef"
+gem "ksef-rb"
 ```
 
 ## Quick start
