@@ -139,6 +139,14 @@ Gemfile) and syncs out with `git subtree push`:
 git subtree push --prefix=vendor/ksef-rb https://github.com/skycocker/ksef-rb.git main
 ```
 
-The gem isn't published to RubyGems yet; bumping the version and `gem build
-+ gem push` is the remaining step before consumers outside probau-rails can
-`gem install ksef-rb`.
+Each release is published to RubyGems with:
+
+```sh
+# from vendor/ksef-rb
+gem build ksef-rb.gemspec
+gem push ksef-rb-<version>.gem
+```
+
+`gem push` is interactive — credentials live at
+`~/.local/share/gem/credentials` and an OTP prompt fires when 2FA is on, so the
+command needs a real TTY. Agents should leave the push to a human.
