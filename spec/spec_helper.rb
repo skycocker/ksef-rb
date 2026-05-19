@@ -33,6 +33,22 @@ require "ksef"
 # Generated once per process so cassettes recorded with one run remain replayable.
 TEST_RSA_KEY = OpenSSL::PKey::RSA.generate(2048)
 
+# Self-signed X.509 wrapper around `TEST_RSA_KEY.public_key` — mirroring what the
+# real `/security/public-key-certificates` endpoint returns (a DER-encoded cert,
+# not a bare SPKI). Used by `SpecSupport.public_key_certificates_body`.
+TEST_RSA_CERT = begin
+  cert = OpenSSL::X509::Certificate.new
+  cert.version    = 2
+  cert.serial     = 1
+  cert.subject    = OpenSSL::X509::Name.parse("/CN=ksef-rb-test")
+  cert.issuer     = cert.subject
+  cert.public_key = TEST_RSA_KEY.public_key
+  cert.not_before = Time.utc(2024, 1, 1)
+  cert.not_after  = Time.utc(2099, 1, 1)
+  cert.sign(TEST_RSA_KEY, OpenSSL::Digest.new("SHA256"))
+  cert
+end
+
 RSpec.configure do |config|
   config.expect_with :rspec do |expectations|
     expectations.include_chain_clauses_in_custom_matcher_descriptions = true
@@ -87,11 +103,13 @@ module SpecSupport
     "https://api-test.ksef.mf.gov.pl/v2#{path}"
   end
 
-  # JSON body used to stub `/security/public-key-certificates`.
+  # JSON body used to stub `/security/public-key-certificates`. Mirrors the real
+  # endpoint: `certificate` is a base64-encoded DER X.509 certificate, not a
+  # bare RSA public key.
   def public_key_certificates_body
     [
       {
-        "certificate"    => Base64.strict_encode64(TEST_RSA_KEY.public_key.to_der),
+        "certificate"    => Base64.strict_encode64(TEST_RSA_CERT.to_der),
         "certificateId"  => "test-cert-id",
         "publicKeyId"    => "test-public-key-id",
         "validFrom"      => "2024-01-01T00:00:00Z",

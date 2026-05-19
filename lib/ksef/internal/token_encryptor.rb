@@ -34,13 +34,20 @@ module Ksef
         Base64.strict_encode64(ciphertext)
       end
 
-      # Convenience wrapper that handles raw DER-encoded (base64) keys returned
-      # by the public-key endpoint, falling back to PEM if the input already
-      # contains BEGIN markers.
+      # Normalizes whatever `/security/public-key-certificates` hands us into a
+      # PEM-encoded RSA public key suitable for {.encrypt}.
+      #
+      # KSeF returns the `certificate` field as a base64-encoded DER X.509
+      # certificate (not a bare public key), so we parse it as a cert first
+      # and extract the SPKI. PEM-armored inputs and bare-key DER blobs are
+      # also accepted as a courtesy.
       def normalize_public_key(raw)
-        return raw if raw.to_s.include?("BEGIN")
+        text = raw.to_s
+        return text if text.include?("BEGIN")
 
-        der = Base64.decode64(raw.to_s)
+        der = Base64.decode64(text)
+        OpenSSL::X509::Certificate.new(der).public_key.to_pem
+      rescue OpenSSL::X509::CertificateError
         OpenSSL::PKey::RSA.new(der).to_pem
       end
     end

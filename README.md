@@ -37,7 +37,8 @@ client.sessions.with_interactive do |_session|
   headers = client.invoices.query(
     subject_type: :recipient,
     date_from:    Time.now.utc - (7 * 24 * 3600),
-    date_to:      Time.now.utc
+    date_to:      Time.now.utc,
+    date_type:    :issue  # :permanent_storage (default), :invoicing, or :issue
   )
 
   headers.each do |h|
@@ -46,6 +47,28 @@ client.sessions.with_interactive do |_session|
 
   xml = client.invoices.fetch_xml(headers.first.ksef_reference_number)
   File.write("invoice.xml", xml)
+end
+```
+
+`#query` returns at most `page_size` headers per call (default 100, max 250).
+Paginate by bumping `page_offset` until a short page comes back:
+
+```ruby
+all = []
+offset = 0
+loop do
+  page = client.invoices.query(
+    subject_type: :recipient,
+    date_from:    Date.new(2026, 4, 1),
+    date_to:      Date.new(2026, 5, 31),
+    date_type:    :issue,
+    page_size:    250,
+    page_offset:  offset
+  )
+  all.concat(page)
+  break if page.size < 250
+
+  offset += 1
 end
 ```
 

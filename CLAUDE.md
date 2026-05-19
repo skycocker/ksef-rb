@@ -56,7 +56,11 @@ CI: `.github/workflows/ci.yml` runs RSpec on Ruby 3.2 / 3.3 / 3.4 and RuboCop
 - **Auth flow** (interactive session):
   1. `POST /auth/challenge` → `{ challenge, timestamp, timestampMs, clientIp }`
   2. Encrypt the integration token with RSA-OAEP/SHA-256 using the public key
-     from `/security/public-key-certificates` (filter usage `KsefTokenEncryption`).
+     from `/security/public-key-certificates` (filter usage
+     `KsefTokenEncryption`). The endpoint returns the public key wrapped in a
+     base64-encoded **DER X.509 certificate**, not a bare SPKI; parse it as a
+     cert and call `#public_key` before feeding it to RSA-OAEP.
+     `Internal::TokenEncryptor.normalize_public_key` does this for you.
   3. `POST /auth/ksef-token` with the encrypted token + challenge → `{ referenceNumber, authenticationToken }`
   4. Poll `GET /auth/{ref}` until `status.code == 200`.
   5. `POST /auth/token/redeem` → `{ accessToken, refreshToken }`.

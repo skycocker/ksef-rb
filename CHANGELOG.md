@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-05-19
+
+### Fixed
+- `/security/public-key-certificates` returns a DER-encoded X.509 certificate,
+  not a bare SPKI. The previous `Internal::TokenEncryptor.normalize_public_key`
+  fed the DER straight into `OpenSSL::PKey::RSA.new`, which raised
+  `OpenSSL::PKey::PKeyError: Neither PUB key nor PRIV key` against the live
+  production endpoint. The normaliser now parses the bytes as an X.509
+  certificate and extracts the public key, falling back to the bare-key code
+  path for backwards compatibility. The spec-helper fixture was updated to
+  return a real self-signed X.509 cert (matching the real KSeF response shape)
+  so the entire session lifecycle exercises this path.
+- `Ksef::InvoiceHeader` now `require`s `"time"` explicitly. It calls
+  `Time.iso8601` to parse `acquisitionDate` / `permanentStorageDate`; the spec
+  suite happened to load `time` transitively via `webmock`, but a bare
+  consumer that only required `"ksef"` got `NoMethodError: undefined method
+  'iso8601' for class Time` the first time they pulled invoice metadata.
+
 ## [0.1.1] - 2026-05-19
 
 ### Added
