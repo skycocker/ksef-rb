@@ -134,7 +134,7 @@ module Ksef
       end
 
       def parse_retry_after(value)
-        return nil if value.nil?
+        return if value.nil?
 
         Integer(value)
       rescue ArgumentError, TypeError

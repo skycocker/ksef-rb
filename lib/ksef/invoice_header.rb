@@ -57,7 +57,7 @@ module Ksef
     private
 
     def parse_date(value)
-      return nil if value.nil? || value.empty?
+      return if value.nil? || value.empty?
 
       Date.iso8601(value)
     rescue ArgumentError
@@ -65,7 +65,7 @@ module Ksef
     end
 
     def parse_time(value)
-      return nil if value.nil? || value.empty?
+      return if value.nil? || value.empty?
 
       Time.iso8601(value)
     rescue ArgumentError
