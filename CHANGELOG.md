@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-07-13
+
+### Fixed
+- Retry middleware: `Faraday::RetriableResponse` was missing from
+  `Connection::RETRY_OPTIONS[:exceptions]`. Because that key overrides the
+  faraday-retry default (which includes it), its absence silently disabled the
+  `retry_statuses: [502, 503, 504]` retries **and** leaked the raw synthetic
+  `Faraday::RetriableResponse` up the stack instead of mapping it to a typed
+  `Ksef::ServerError`. Observed in production as an unretried gateway blip on
+  `POST /auth/challenge` surfacing as `Faraday::RetriableResponse` rather than
+  being absorbed. The class is now included, so 502/503/504 are retried up to
+  `max` and, if still failing, raised as `Ksef::ServerError`. Added regression
+  specs covering both retry-then-recover and retry-then-exhaust paths.
+
 ## [0.1.2] - 2026-05-19
 
 ### Fixed

@@ -64,6 +64,38 @@ RSpec.describe Ksef::Internal::Connection do
     end
   end
 
+  describe "retry behaviour" do
+    # faraday-retry raises a synthetic `Faraday::RetriableResponse` for statuses
+    # in RETRY_OPTIONS[:retry_statuses]. Because we override `exceptions`, that
+    # class must be present in the list — otherwise the synthetic exception is
+    # neither retried nor caught, and leaks past `check!` as a raw Faraday error.
+    before { allow_any_instance_of(Faraday::Retry::Middleware).to receive(:sleep) }
+
+    it "retries retriable 5xx statuses and raises a typed ServerError once exhausted" do
+      stub = stub_request(:post, SpecSupport.api_url("/auth/challenge"))
+             .to_return(status: 503, body: "{}", headers: { "Content-Type" => "application/json" })
+
+      expect { connection.request(:post, "/auth/challenge") }
+        .to raise_error(Ksef::ServerError) { |err| expect(err.status).to eq(503) }
+
+      # 1 initial attempt + RETRY_OPTIONS[:max] (2) retries
+      expect(stub).to have_been_requested.times(3)
+    end
+
+    it "recovers when a retriable status is followed by success" do
+      stub = stub_request(:post, SpecSupport.api_url("/auth/challenge"))
+             .to_return(
+               { status: 503, body: "{}",                            headers: { "Content-Type" => "application/json" } },
+               { status: 200, body: SpecSupport.challenge_body.to_json, headers: { "Content-Type" => "application/json" } }
+             )
+
+      response = connection.request(:post, "/auth/challenge")
+
+      expect(response.status).to eq(200)
+      expect(stub).to have_been_requested.times(2)
+    end
+  end
+
   describe "request building" do
     it "sets bearer token when supplied" do
       stub = stub_request(:get, SpecSupport.api_url("/auth/sessions/current"))

@@ -18,10 +18,17 @@ module Ksef
         backoff_factor:      2,
         retry_statuses:      [502, 503, 504],
         methods:             %i[get head post delete put patch],
+        # `Faraday::RetriableResponse` MUST stay in this list: faraday-retry
+        # raises it internally to trigger a `retry_statuses` retry. Because we
+        # override `exceptions` (rather than inheriting the middleware default,
+        # which includes it), omitting it silently disables 502/503/504 retries
+        # *and* leaks the raw synthetic exception past `check!` instead of
+        # mapping it to a typed `Ksef::ServerError`.
         exceptions:          [
           Errno::ETIMEDOUT,
           Faraday::TimeoutError,
-          Faraday::ConnectionFailed
+          Faraday::ConnectionFailed,
+          Faraday::RetriableResponse
         ]
       }.freeze
 
